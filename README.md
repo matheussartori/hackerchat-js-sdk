@@ -28,15 +28,15 @@ Hackerchat JS SDK is a lightweight client library for connecting to a [Hackercha
 ## Install
 
 ```bash
-npm install hackerchat-js-sdk
+npm install @matheussartori/hackerchat-js-sdk
 ```
 
-React is an optional peer dependency — only needed if you import `hackerchat-js-sdk/react`.
+React is an optional peer dependency — only needed if you import `@matheussartori/hackerchat-js-sdk/react`.
 
 ## Quick start (vanilla)
 
 ```ts
-import { HackerchatClient } from 'hackerchat-js-sdk'
+import { HackerchatClient } from '@matheussartori/hackerchat-js-sdk'
 
 const client = new HackerchatClient({ url: 'wss://hackerchatserver.mattsartori.com.br' })
 
@@ -53,7 +53,7 @@ client.sendMessage('Hello, world!')
 ## React
 
 ```tsx
-import { useHackerchat } from 'hackerchat-js-sdk/react'
+import { useHackerchat } from '@matheussartori/hackerchat-js-sdk/react'
 
 export function Chat() {
   const { status, users, messages, sendMessage } = useHackerchat({
@@ -241,7 +241,7 @@ React hook that manages a `HackerchatClient` for you. The client is created once
 | `client` | `HackerchatClient` | The underlying client instance. Use this to subscribe to raw events or for advanced use cases. |
 
 ```tsx
-import { useHackerchat } from 'hackerchat-js-sdk/react'
+import { useHackerchat } from '@matheussartori/hackerchat-js-sdk/react'
 
 export function Chat() {
   const { status, users, messages, sendMessage } = useHackerchat({

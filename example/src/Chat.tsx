@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useHackerchat } from 'hackerchat-js-sdk/react'
+import { useHackerchat } from '@matheussartori/hackerchat-js-sdk/react'
 
 interface ChatProps {
   url: string

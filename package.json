@@ -1,6 +1,9 @@
 {
-  "name": "hackerchat-js-sdk",
-  "version": "0.1.0",
+  "name": "@matheussartori/hackerchat-js-sdk",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "1.0.0",
   "description": "JavaScript/TypeScript SDK for connecting to a Hackerchat server. Ships a framework-agnostic client plus React bindings.",
   "type": "module",
   "main": "./dist/index.js",
