@@ -8,7 +8,7 @@ import type {
 } from './types'
 
 export interface HackerchatClientOptions {
-  /** Full WebSocket URL, e.g. `wss://hackerchatserver.mattsartori.com.br`. */
+  /** Full WebSocket URL, e.g. `ws://localhost:9898`. */
   url: string
   /** Optional custom WebSocket constructor (useful for tests or Node). */
   webSocketImpl?: typeof WebSocket

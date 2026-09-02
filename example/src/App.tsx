@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Chat } from './Chat'
 
-const DEFAULT_URL = 'wss://hackerchatserver.mattsartori.com.br'
+const DEFAULT_URL = 'ws://localhost:9898'
 
 export function App() {
   const [config, setConfig] = useState<{
