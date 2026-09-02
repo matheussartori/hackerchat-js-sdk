@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { HackerchatClient } from '../client'
 import type { ChatMessage, ConnectionStatus, User } from '../types'
 
@@ -30,11 +30,9 @@ export interface UseHackerchatResult {
 export function useHackerchat(options: UseHackerchatOptions): UseHackerchatResult {
   const { url, userName, roomId, autoConnect = true } = options
 
-  const clientRef = useRef<HackerchatClient | null>(null)
-  if (clientRef.current === null) {
-    clientRef.current = new HackerchatClient({ url })
-  }
-  const client = clientRef.current
+  // Lazy state initializer so the client is constructed exactly once per
+  // component instance. Changing `url` afterwards does not recreate it.
+  const [client] = useState(() => new HackerchatClient({ url }))
 
   const [status, setStatus] = useState<ConnectionStatus>(client.status)
   const [users, setUsers] = useState<User[]>([])

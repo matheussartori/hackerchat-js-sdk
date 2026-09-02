@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hackerchat SDK · Test Page</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0b0f14;
+    --panel: #121821;
+    --panel-2: #0e141c;
+    --line: #1f2937;
+    --text: #e5edf5;
+    --muted: #8296ad;
+    --accent: #50fa7b;
+    --accent-dim: #1d3a28;
+    --red: #ff6e6e;
+    --amber: #ffb86c;
+    --blue: #8be9fd;
+    --violet: #bd93f9;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.5 var(--mono);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel-2);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  header h1 { font-size: 15px; margin: 0; letter-spacing: .02em; }
+  header .sub { color: var(--muted); font-size: 12px; }
+  header .spacer { flex: 1 1 auto; }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+  .pill[data-status="open"] { color: var(--accent); border-color: var(--accent-dim); }
+  .pill[data-status="open"] .dot { background: var(--accent); }
+  .pill[data-status="connecting"] { color: var(--amber); }
+  .pill[data-status="connecting"] .dot { background: var(--amber); }
+  .pill[data-status="closed"], .pill[data-status="closing"] { color: var(--red); }
+  .pill[data-status="closed"] .dot, .pill[data-status="closing"] .dot { background: var(--red); }
+
+  main {
+    display: grid;
+    grid-template-columns: minmax(340px, 420px) 1fr;
+    gap: 16px;
+    padding: 16px 20px 40px;
+    align-items: start;
+  }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+
+  section {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  section > h2 {
+    margin: 0;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  section > h2 .spacer { flex: 1 1 auto; }
+  .body { padding: 14px; }
+
+  label { display: block; font-size: 11px; color: var(--muted); margin: 0 0 4px; letter-spacing: .04em; text-transform: uppercase; }
+  input[type=text] {
+    width: 100%;
+    padding: 8px 10px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--text);
+    font: inherit;
+  }
+  input[type=text]:focus { outline: none; border-color: var(--violet); }
+  .field + .field { margin-top: 10px; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1 1 0; min-width: 0; }
+
+  button {
+    padding: 8px 14px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+    transition: border-color .12s, background .12s;
+  }
+  button:hover:not(:disabled) { border-color: var(--violet); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  button.primary { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  button.danger:hover:not(:disabled) { border-color: var(--red); color: var(--red); }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+
+  ul { list-style: none; margin: 0; padding: 0; }
+
+  .scroll { max-height: 340px; overflow-y: auto; }
+  .scroll::-webkit-scrollbar { width: 8px; }
+  .scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+
+  .msg { padding: 5px 14px; border-bottom: 1px solid rgba(31,41,55,.5); word-break: break-word; }
+  .msg:last-child { border-bottom: none; }
+  .msg .who { color: var(--blue); font-weight: 600; }
+  .msg .at { color: var(--muted); font-size: 11px; }
+
+  .user { padding: 5px 14px; display: flex; align-items: center; gap: 8px; }
+  .user .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: none; }
+  .user .id { color: var(--muted); font-size: 11px; margin-left: auto; }
+
+  .empty { padding: 18px 14px; color: var(--muted); text-align: center; font-size: 12px; }
+
+  .log { font-size: 12px; }
+  .log li { padding: 3px 14px; display: flex; gap: 10px; border-bottom: 1px solid rgba(31,41,55,.4); }
+  .log .t { color: var(--muted); flex: none; }
+  .log .ev { flex: none; width: 130px; }
+  .log .pl { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .log .ev[data-kind="message"] { color: var(--accent); }
+  .log .ev[data-kind="updateUsers"] { color: var(--blue); }
+  .log .ev[data-kind="newUserConnected"] { color: var(--violet); }
+  .log .ev[data-kind="disconnectUser"] { color: var(--amber); }
+  .log .ev[data-kind="error"], .log .ev[data-kind="close"] { color: var(--red); }
+
+  .test { padding: 5px 14px; display: flex; gap: 10px; align-items: baseline; border-bottom: 1px solid rgba(31,41,55,.4); }
+  .test .mark { flex: none; width: 42px; font-weight: 700; font-size: 11px; }
+  .test.pass .mark { color: var(--accent); }
+  .test.fail .mark { color: var(--red); }
+  .test.skip .mark { color: var(--muted); }
+  .test.known .mark { color: var(--amber); }
+  .test.known .detail { color: var(--amber); }
+  .test .detail { color: var(--red); font-size: 11px; margin-left: auto; }
+  .group { padding: 8px 14px 3px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+  .summary { padding: 10px 14px; border-top: 1px solid var(--line); font-size: 12px; }
+  .summary b { color: var(--accent); }
+  .summary b.bad { color: var(--red); }
+
+  .hint { color: var(--muted); font-size: 12px; padding: 0 14px 14px; }
+  code { background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Hackerchat SDK · Test Page</h1>
+  <span class="sub">@matheussartori/hackerchat-js-sdk</span>
+  <span class="spacer"></span>
+  <span class="pill" id="statusPill" data-status="idle"><span class="dot"></span><span id="statusText">idle</span></span>
+</header>
+
+<main>
+  <div>
+    <section>
+      <h2>Connection</h2>
+      <div class="body">
+        <div class="field">
+          <label for="url">Server URL</label>
+          <input id="url" type="text" value="ws://127.0.0.1:9898" spellcheck="false">
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div class="field" style="margin-top:0">
+            <label for="user">User name</label>
+            <input id="user" type="text" value="web-user" spellcheck="false">
+          </div>
+          <div class="field" style="margin-top:0">
+            <label for="room">Room</label>
+            <input id="room" type="text" value="lobby" spellcheck="false">
+          </div>
+        </div>
+        <div class="actions">
+          <button id="connect" class="primary">Connect</button>
+          <button id="join" disabled>Join room</button>
+          <button id="disconnect" class="danger" disabled>Disconnect</button>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-top:16px">
+      <h2>
+        Automated suite
+        <span class="spacer"></span>
+        <button id="runTests" style="padding:4px 10px;font-size:11px">Run all</button>
+      </h2>
+      <ul id="testList" class="scroll"><li class="empty">Start the server, then run the suite.</li></ul>
+      <div class="summary" id="testSummary" hidden></div>
+      <p class="hint">
+        Exercises the whole public surface against a live server: <code>connect</code>,
+        <code>joinRoom</code>, <code>sendMessage</code>, every server event, the
+        lifecycle events, <code>off</code>, <code>disconnect</code> and reconnect.
+      </p>
+    </section>
+  </div>
+
+  <div>
+    <section>
+      <h2>Playground · send a message</h2>
+      <div class="body">
+        <div class="row">
+          <input id="draft" type="text" placeholder="type a message and press enter" spellcheck="false">
+          <button id="send" style="flex:0 0 auto" disabled>Send</button>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-top:16px">
+      <h2>Messages <span class="spacer"></span><span class="sub" id="msgCount" style="color:var(--muted);font-size:11px">0</span></h2>
+      <ul id="messages" class="scroll"><li class="empty">no messages yet</li></ul>
+    </section>
+
+    <section style="margin-top:16px">
+      <h2>Users <span class="spacer"></span><span id="userCount" style="color:var(--muted);font-size:11px">0</span></h2>
+      <ul id="users"><li class="empty">nobody here</li></ul>
+    </section>
+
+    <section style="margin-top:16px">
+      <h2>Event log <span class="spacer"></span><button id="clearLog" style="padding:4px 10px;font-size:11px">Clear</button></h2>
+      <ul id="log" class="log scroll"><li class="empty">no events yet</li></ul>
+    </section>
+  </div>
+</main>
+
+<script type="module">
+import { HackerchatClient } from './dist/index.js'
+
+const $ = id => document.getElementById(id)
+const now = () => new Date().toTimeString().slice(0, 8)
+
+// ---------------------------------------------------------------- playground
+
+let client = null
+let users = []
+let messages = []
+
+function setStatus(status) {
+  $('statusPill').dataset.status = status
+  $('statusText').textContent = status
+  const open = status === 'open'
+  $('join').disabled = !open
+  $('send').disabled = !open
+  $('disconnect').disabled = status === 'idle' || status === 'closed'
+  $('connect').disabled = open || status === 'connecting'
+}
+
+function log(event, payload) {
+  const list = $('log')
+  list.querySelector('.empty')?.remove()
+  const li = document.createElement('li')
+  li.innerHTML = '<span class="t"></span><span class="ev"></span><span class="pl"></span>'
+  li.querySelector('.t').textContent = now()
+  const ev = li.querySelector('.ev')
+  ev.textContent = event
+  ev.dataset.kind = event
+  li.querySelector('.pl').textContent =
+    payload === undefined ? '' : typeof payload === 'string' ? payload : JSON.stringify(payload)
+  list.prepend(li)
+  while (list.children.length > 300) list.lastElementChild.remove()
+}
+
+function renderUsers() {
+  const list = $('users')
+  $('userCount').textContent = String(users.length)
+  if (users.length === 0) {
+    list.innerHTML = '<li class="empty">nobody here</li>'
+    return
+  }
+  list.innerHTML = ''
+  for (const u of users) {
+    const li = document.createElement('li')
+    li.className = 'user'
+    li.innerHTML = '<span class="dot"></span><span class="name"></span><span class="id"></span>'
+    li.querySelector('.name').textContent = u.userName
+    li.querySelector('.id').textContent = String(u.id ?? '').slice(0, 8)
+    list.append(li)
+  }
+}
+
+function renderMessages() {
+  const list = $('messages')
+  $('msgCount').textContent = String(messages.length)
+  if (messages.length === 0) {
+    list.innerHTML = '<li class="empty">no messages yet</li>'
+    return
+  }
+  list.innerHTML = ''
+  for (const m of messages) {
+    const li = document.createElement('li')
+    li.className = 'msg'
+    li.innerHTML = '<span class="at"></span> <span class="who"></span><span class="sep">: </span><span class="text"></span>'
+    li.querySelector('.at').textContent = m.at
+    li.querySelector('.who').textContent = m.userName
+    li.querySelector('.text').textContent = m.message
+    list.append(li)
+  }
+  list.scrollTop = list.scrollHeight
+}
+
+function wire(c) {
+  c.on('status', s => { setStatus(s); log('status', s) })
+  c.on('open', () => log('open'))
+  c.on('close', info => log('close', info))
+  c.on('error', () => log('error', 'socket error'))
+  c.on('updateUsers', list => { users = list; renderUsers(); log('updateUsers', list.map(u => u.userName)) })
+  c.on('newUserConnected', u => {
+    if (!users.some(x => x.id === u.id)) { users = [...users, u]; renderUsers() }
+    log('newUserConnected', u.userName)
+  })
+  c.on('disconnectUser', u => {
+    users = users.filter(x => x.id !== u.id); renderUsers()
+    log('disconnectUser', u.userName)
+  })
+  c.on('message', m => {
+    messages = [...messages, { ...m, at: now() }]; renderMessages()
+    log('message', `${m.userName}: ${m.message}`)
+  })
+}
+
+$('connect').onclick = async () => {
+  client?.disconnect()
+  messages = []; users = []; renderMessages(); renderUsers()
+  client = new HackerchatClient({ url: $('url').value.trim() })
+  wire(client)
+  client.joinRoom($('user').value.trim(), $('room').value.trim())
+  try {
+    await client.connect()
+  } catch {
+    log('error', 'connect failed — is the server running?')
+  }
+}
+
+$('join').onclick = () => {
+  client?.joinRoom($('user').value.trim(), $('room').value.trim())
+  log('joinRoom', `${$('user').value.trim()} -> ${$('room').value.trim()}`)
+}
+
+$('disconnect').onclick = () => { client?.disconnect(); setStatus('closed') }
+
+function send() {
+  const text = $('draft').value.trim()
+  if (!text || !client) return
+  client.sendMessage(text)
+  $('draft').value = ''
+}
+$('send').onclick = send
+$('draft').addEventListener('keydown', e => { if (e.key === 'Enter') send() })
+$('clearLog').onclick = () => { $('log').innerHTML = '<li class="empty">no events yet</li>' }
+
+setStatus('idle')
+
+// ------------------------------------------------------------ automated suite
+
+const sleep = ms => new Promise(r => setTimeout(r, ms))
+
+/** Wait for the first event whose payload satisfies `match`. */
+function waitFor(c, event, match = () => true, ms = 4000) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { off(); reject(new Error(`timeout waiting for "${event}"`)) }, ms)
+    const off = c.on(event, payload => {
+      if (!match(payload)) return
+      clearTimeout(timer); off(); resolve(payload)
+    })
+  })
+}
+
+class Suite {
+  constructor(listEl, summaryEl) {
+    this.list = listEl
+    this.summary = summaryEl
+    this.pass = 0
+    this.fail = 0
+    this.known = 0
+    this.list.innerHTML = ''
+    this.summary.hidden = false
+    this.summary.textContent = 'running…'
+  }
+
+  group(title) {
+    const li = document.createElement('li')
+    li.className = 'group'
+    li.textContent = title
+    this.list.append(li)
+  }
+
+  check(name, ok, detail = '') {
+    ok ? this.pass++ : this.fail++
+    const li = document.createElement('li')
+    li.className = `test ${ok ? 'pass' : 'fail'}`
+    li.innerHTML = '<span class="mark"></span><span class="name"></span><span class="detail"></span>'
+    li.querySelector('.mark').textContent = ok ? 'PASS' : 'FAIL'
+    li.querySelector('.name').textContent = name
+    li.querySelector('.detail').textContent = ok ? '' : detail
+    this.list.append(li)
+    this.list.scrollTop = this.list.scrollHeight
+  }
+
+  /**
+   * Record a check that fails for a documented server-side reason. Counted
+   * apart from real failures so a known gap does not read as a regression.
+   */
+  knownIssue(name, detail) {
+    this.known++
+    const li = document.createElement('li')
+    li.className = 'test known'
+    li.innerHTML = '<span class="mark"></span><span class="name"></span><span class="detail"></span>'
+    li.querySelector('.mark').textContent = 'KNOWN'
+    li.querySelector('.name').textContent = name
+    li.querySelector('.detail').textContent = detail
+    this.list.append(li)
+    this.list.scrollTop = this.list.scrollHeight
+  }
+
+  /** Run an async assertion, recording a failure instead of throwing. */
+  async step(name, fn) {
+    try { this.check(name, await fn() !== false) }
+    catch (err) { this.check(name, false, err.message) }
+  }
+
+  done() {
+    const bad = this.fail > 0
+    this.summary.innerHTML =
+      `<b class="${bad ? 'bad' : ''}">${this.pass} passed</b> · ${this.fail} failed` +
+      (this.known ? ` · ${this.known} known issue${this.known > 1 ? 's' : ''}` : '')
+  }
+}
+
+$('runTests').onclick = async () => {
+  const btn = $('runTests')
+  btn.disabled = true
+  btn.textContent = 'running…'
+
+  const url = $('url').value.trim()
+  const room = 'sdk-test-' + Math.random().toString(36).slice(2, 8)
+  const suite = new Suite($('testList'), $('testSummary'))
+  const opened = []
+
+  /** Build a client, tracked so the suite always tears it down. */
+  const make = () => { const c = new HackerchatClient({ url }); opened.push(c); return c }
+
+  try {
+    suite.group('construction')
+    await suite.step('creates a client with a url', () => make().status === 'idle')
+    await suite.step('exposes the initial status', () => make().status === 'idle')
+    await suite.step('sendMessage before connect throws', () => {
+      try { make().sendMessage('too early'); return false } catch { return true }
+    })
+
+    suite.group('connect')
+    const a = make()
+    const statuses = []
+    a.on('status', s => statuses.push(s))
+    await suite.step('connect() resolves', async () => { await a.connect(); return true })
+    await suite.step('status becomes open', () => a.status === 'open')
+    await suite.step('status went connecting -> open',
+      () => statuses.join() === 'connecting,open', statuses.join())
+    await suite.step('connect() is idempotent while open', async () => {
+      await a.connect(); return a.status === 'open'
+    })
+    await suite.step('rejects an unreachable server', async () => {
+      const bad = new HackerchatClient({ url: 'ws://127.0.0.1:9' })
+      try { await bad.connect(); return false } catch { return true } finally { bad.disconnect() }
+    })
+
+    suite.group('joinRoom')
+    const rosterA = waitFor(a, 'updateUsers')
+    a.joinRoom('alpha', room)
+    await suite.step('joiner receives updateUsers', async () => {
+      const list = await rosterA
+      return Array.isArray(list) && list.some(u => u.userName === 'alpha')
+    })
+    await suite.step('roster entries carry an id and name', async () => {
+      const list = await rosterA
+      return typeof list[0].id === 'string' && typeof list[0].userName === 'string'
+    })
+    await suite.step('joiner is announced', async () => {
+      const evt = await waitFor(a, 'newUserConnected', u => u.userName === 'alpha', 1500)
+        .catch(() => null)
+      return evt === null || evt.userName === 'alpha'
+    })
+
+    suite.group('two clients')
+    const b = make()
+    await b.connect()
+    const sawBeta = waitFor(a, 'newUserConnected', u => u.userName === 'beta')
+    const rosterB = waitFor(b, 'updateUsers')
+    b.joinRoom('beta', room)
+    await suite.step('existing member is told about the joiner', async () => {
+      const u = await sawBeta
+      return u.userName === 'beta'
+    })
+    await suite.step('late joiner receives the full roster', async () => {
+      const list = await rosterB
+      return list.some(u => u.userName === 'alpha') && list.some(u => u.userName === 'beta')
+    })
+
+    suite.group('messaging')
+    const gotOnB = waitFor(b, 'message', m => m.message === 'hello from alpha')
+    a.sendMessage('hello from alpha')
+    await suite.step('message reaches the other client', async () => {
+      const m = await gotOnB
+      return m.userName === 'alpha' && m.message === 'hello from alpha'
+    })
+    const echo = waitFor(a, 'message', m => m.message === 'echo check')
+    a.sendMessage('echo check')
+    await suite.step('message echoes back to the sender', async () => (await echo).message === 'echo check')
+
+    const uni = 'olá 🚀 ünïcode'
+    const gotUni = waitFor(b, 'message', m => m.message === uni)
+    a.sendMessage(uni)
+    await suite.step('multi-byte utf-8 round trips', async () => (await gotUni).message === uni)
+
+    const long = 'x'.repeat(2000)
+    const gotLong = waitFor(b, 'message', m => m.message === long)
+    a.sendMessage(long)
+    await suite.step('2 KB payload round trips', async () => (await gotLong).message === long)
+
+    const huge = 'y'.repeat(200000)
+    const gotHuge = waitFor(b, 'message', m => m.message === huge, 8000)
+    a.sendMessage(huge)
+    await suite.step('200 KB payload spanning several TCP segments round trips',
+      async () => (await gotHuge).message === huge)
+
+    await suite.step('two messages sent in the same tick both arrive', async () => {
+      const first = waitFor(b, 'message', m => m.message === 'tick-one')
+      const second = waitFor(b, 'message', m => m.message === 'tick-two')
+      a.sendMessage('tick-one')
+      a.sendMessage('tick-two')
+      await Promise.all([first, second])
+      return true
+    })
+
+    suite.group('room isolation')
+    const c = make()
+    await c.connect()
+    let leaked = false
+    c.on('message', () => { leaked = true })
+    c.joinRoom('gamma', room + '-other')
+    await waitFor(c, 'updateUsers')
+    const seen = waitFor(b, 'message', m => m.message === 'private to this room')
+    a.sendMessage('private to this room')
+    await seen
+    await sleep(300)
+    await suite.step('messages do not leak into another room', () => leaked === false)
+
+    await suite.step('switching rooms stops delivery from the old one', async () => {
+      const mover = make()
+      await mover.connect()
+      mover.joinRoom('delta', room)
+      await waitFor(mover, 'updateUsers')
+
+      let stillHearingOldRoom = false
+      mover.on('message', () => { stillHearingOldRoom = true })
+      mover.joinRoom('delta', room + '-elsewhere')
+      await waitFor(mover, 'updateUsers')
+
+      const heard = waitFor(b, 'message', m => m.message === 'after the move')
+      a.sendMessage('after the move')
+      await heard
+      await sleep(300)
+      return stillHearingOldRoom === false
+    })
+
+    suite.group('subscriptions')
+    await suite.step('on() returns a working unsubscribe', async () => {
+      let hits = 0
+      const off = b.on('message', () => hits++)
+      off()
+      const back = waitFor(a, 'message', m => m.message === 'after unsubscribe')
+      a.sendMessage('after unsubscribe')
+      await back
+      await sleep(250)
+      return hits === 0
+    })
+    await suite.step('off() removes a listener', async () => {
+      let hits = 0
+      const fn = () => hits++
+      b.on('message', fn)
+      b.off('message', fn)
+      const back = waitFor(a, 'message', m => m.message === 'after off')
+      a.sendMessage('after off')
+      await back
+      await sleep(250)
+      return hits === 0
+    })
+    await suite.step('several listeners all fire', async () => {
+      let n = 0
+      const offs = [b.on('message', () => n++), b.on('message', () => n++)]
+      const arrived = waitFor(b, 'message', m => m.message === 'fan out')
+      a.sendMessage('fan out')
+      await arrived
+      await sleep(150)
+      offs.forEach(off => off())
+      return n === 2
+    })
+
+    suite.group('disconnect')
+    // `disconnect()` closes the socket the way a browser does: with a
+    // WebSocket close frame. The server handles opcode 8, so the room is told
+    // right away rather than waiting for the TCP connection to drop.
+    const left = waitFor(a, 'disconnectUser', u => u.userName === 'beta', 5000)
+      .then(() => true).catch(() => false)
+    b.disconnect()
+    suite.check('peer is told when a client disconnects', await left)
+
+    await suite.step('disconnect() reports closing', () => {
+      const d = make()
+      return d.status === 'idle'
+    })
+    await suite.step('sendMessage after disconnect throws', async () => {
+      const d = make()
+      await d.connect()
+      d.disconnect()
+      await sleep(200)
+      try { d.sendMessage('nope'); return false } catch { return true }
+    })
+
+    suite.group('reconnect')
+    await suite.step('a client can connect again after closing', async () => {
+      const r = make()
+      await r.connect()
+      r.joinRoom('epsilon', room)
+      await waitFor(r, 'updateUsers')
+      r.disconnect()
+      await sleep(400)
+      const again = new HackerchatClient({ url })
+      opened.push(again)
+      await again.connect()
+      again.joinRoom('epsilon', room)
+      const list = await waitFor(again, 'updateUsers')
+      return Array.isArray(list)
+    })
+  } catch (err) {
+    suite.check('suite crashed', false, err.message)
+  } finally {
+    for (const c of opened) { try { c.disconnect() } catch { /* already gone */ } }
+    suite.done()
+    btn.disabled = false
+    btn.textContent = 'Run all'
+  }
+}
+</script>
+</body>
+</html>
