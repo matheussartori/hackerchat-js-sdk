@@ -328,7 +328,7 @@ Then open <http://localhost:5173>. The demo aliases the package to the sources, 
 | `npm run example` | Start the demo app |
 | `npm run test:page` | Build, then serve `test-page.html` on <http://localhost:4173> for manual checks against a real server |
 
-CI runs lint, typecheck, tests with coverage, the build, the packaging check and `npm audit` on Node 22 and 24.
+CI runs lint, typecheck, tests with coverage, the build, the packaging check and `npm audit` on Node 26 (LTS).
 
 ## Related Projects
 
