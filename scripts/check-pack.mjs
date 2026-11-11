@@ -21,7 +21,9 @@ const output = execFileSync('npm', ['pack', '--dry-run', '--json'], {
   stdio: ['ignore', 'pipe', 'ignore'],
 })
 
-const [result] = JSON.parse(output)
+// npm <=11 returns an array; npm 12+ returns an object keyed by package name.
+const parsed = JSON.parse(output)
+const result = Array.isArray(parsed) ? parsed[0] : Object.values(parsed)[0]
 const files = (result?.files ?? []).map(f => f.path)
 
 if (files.length === 0) {
